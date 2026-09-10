@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>116視覺提案競選大賽</title>
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #cbd5e1;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    
+    .container {
+      background: var(--card-bg);
+      max-width: 680px;
+      width: 100%;
+      border-radius: var(--radius);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      padding: 44px 36px;
+      position: relative;
+    }
+
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      color: #0f172a;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #0f172a;
+      text-align: center;
+    }
+
+    p {
+      line-height: 2;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+      color: #334155;
+      text-align: justify;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .notice {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #92400e;
+      background: #fef3c7;
+      border-left: 5px solid #f59e0b;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    /* 網格選項（8選2、4選1 採用規整 4 欄與 2 欄） */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 32px 0;
+      justify-content: center;
+    }
+
+    /* 直式單欄選項（5選1 專用：直列置中） */
+    .options-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 360px;
+      margin: 32px auto;
+    }
+
+    .option-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: #ffffff;
+      transition: all 0.2s ease;
+      user-select: none;
+      min-height: 64px;
+    }
+
+    .option-item input { display: none; }
+    
+    .option-item:hover {
+      border-color: #93c5fd;
+      background-color: #f8fafc;
+    }
+
+    .option-item.selected {
+      border-color: var(--primary);
+      background-color: #eff6ff;
+      color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    /* 按鈕樣式 */
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 40px;
+      gap: 16px;
+    }
+
+    button {
+      padding: 15px 32px;
+      font-size: 1.15rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .btn-next {
+      background-color: var(--primary);
+      color: white;
+      margin-left: auto;
+    }
+
+    .btn-next:hover { background-color: var(--primary-hover); }
+
+    .btn-prev {
+      background-color: #e2e8f0;
+      color: #334155;
+    }
+
+    .btn-prev:hover { background-color: #cbd5e1; }
+
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .progress-bar {
+      height: 6px;
+      background: #e2e8f0;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .progress-inner { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+    
+    .hint {
+      color: #dc2626;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 10px;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .options-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="progress-bar"><div class="progress-inner" id="progress"></div></div>
+
+    <!-- 頁面 1: 首頁 -->
+    <div class="step active">
+      <h1>116視覺提案競選大賽</h1>
+      <p style="text-align: center; color: var(--text-muted);">歡迎大家參與本次視覺提案票選！</p>
+      <div class="btn-group">
+        <button class="btn-next" onclick="nextStep()">進入</button>
+      </div>
+    </div>
+
+    <!-- 頁面 2: 感謝說明 -->
+    <div class="step">
+      <h2>致所有夥伴</h2>
+      <p>這次的提案，不論最後有沒有當選，大家的作品都非常棒，也都看得到每個人的想法與努力。</p>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" onclick="nextStep()">下一頁</button>
+      </div>
+    </div>
+
+    <!-- 頁面 3: 心態共識 -->
+    <div class="step">
+      <h2>共享與協作心態</h2>
+      <p>想提醒大家，當提案確定後，後續的視覺製作並不只是由原作者單方面操作，希望大家都能保持「共享、共用」的心態，一起參與後續的發展與製作。</p>
+      <p>也希望不要抱持著「覺得交給別人做，就會差點意思」的心態。既然最後是大家共同的視覺，就不需要侷限在原作者原本的想法或手法，而是讓每個人都有參與、討論與發展的空間。</p>
+      <p>並且不要急著堅持個人想法，也不要急著主導視覺呈現的好與壞。每個人的想法都可以攤開來討論，沒有誰比較好、誰比較差，重要的是一起找到最適合整體的方向，把最後的成果做好。</p>
+      <p>如果後續製作過程中有任何問題、不同想法，或覺得哪個地方需要調整，都可以直接提出來討論。大家能放下「這是我的作品」的界線，把它當成我們共同的作品，一起參與、一起發展，也一起完成最後的視覺呈現。</p>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" onclick="nextStep()">下一頁</button>
+      </div>
+    </div>
+
+    <!-- 頁面 4: 評選指南 -->
+    <div class="step">
+      <h2>投票即將開始</h2>
+      <p class="subtitle">請各位參與票選的同仁，在評估時不僅著重於視覺上的美感，也請一併考量各提案後續的發展性、完整性與原創性，並注意是否有過度參考或抄襲既有作品的情況。</p>
+      <div class="notice">
+        ＊是否具備良好的延伸性、能否廣泛應用於不同媒介與情境，以及未來是否能進行動態延伸等，皆可納入評估與選擇的考量
+      </div>
+      <p class="subtitle">希望大家能從整體的視覺發展與實際應用來思考，綜合各方面條件後再進行票選。謝謝大家！</p>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" id="startVoteBtn" onclick="handleStartVoting()">開始投票</button>
+      </div>
+    </div>
+
+    <!-- 頁面 5: 第1題 (116標誌 - 8選2，4欄網格整齊排開) -->
+    <div class="step">
+      <h2>第一題：116標誌</h2>
+      <p class="subtitle">八個數字選擇僅能選擇兩個：</p>
+      <div class="options-grid" id="q1-grid"></div>
+      <div class="hint" id="q1-hint">請恰好選擇 2 個選項</div>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" onclick="validateStep(1, 2)">下一頁</button>
+      </div>
+    </div>
+
+    <!-- 頁面 6: 第2題 (卡接形容 - 4選1) -->
+    <div class="step">
+      <h2>第二題：卡接形容</h2>
+      <p class="subtitle">四個選項，擇一：</p>
+      <div class="options-grid" id="q2-grid"></div>
+      <div class="hint" id="q2-hint">請選擇 1 個選項</div>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" onclick="validateStep(2, 1)">下一頁</button>
+      </div>
+    </div>
+
+    <!-- 頁面 7: 第3題 (形容標準字 - 5選1，改為直式單欄排列) -->
+    <div class="step">
+      <h2>第三題：形容標準字</h2>
+      <p class="subtitle">五個選項，擇一：</p>
+      <div class="options-vertical" id="q3-grid"></div>
+      <div class="hint" id="q3-hint">請選擇 1 個選項</div>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" onclick="validateStep(3, 1)">下一頁</button>
+      </div>
+    </div>
+
+    <!-- 頁面 8: 第4題 (形容標誌 - 5選1，改為直式單欄排列) -->
+    <div class="step">
+      <h2>第四題：形容標誌</h2>
+      <p class="subtitle">五個選項，擇一：</p>
+      <div class="options-vertical" id="q4-grid"></div>
+      <div class="hint" id="q4-hint">請選擇 1 個選項</div>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" onclick="validateStep(4, 1)">下一頁</button>
+      </div>
+    </div>
+
+    <!-- 頁面 9: 第5題 (海報風格 - 8選2，4欄網格整齊排開) -->
+    <div class="step">
+      <h2>第五題：海報風格</h2>
+      <p class="subtitle">八個選項，擇二：</p>
+      <div class="options-grid" id="q5-grid"></div>
+      <div class="hint" id="q5-hint">請恰好選擇 2 個選項</div>
+      <div class="btn-group">
+        <button class="btn-prev" onclick="prevStep()">上一頁</button>
+        <button class="btn-next" id="submitBtn" onclick="validateAndSubmit()">送出選票</button>
+      </div>
+    </div>
+
+    <!-- 頁面 10: 完成頁面 -->
+    <div class="step">
+      <h1>投票完成！</h1>
+      <p style="text-align: center; font-size: 1.3rem;">您的選票已成功統計至試算表中，謝謝您的參與！</p>
+    </div>
+
+  </div>
+
+  <script>
+    // ⚠️ 請替換為您的 Google Apps Script 部署網址
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEFujBAhnMDj5W-90bYjaXPL8tZVCUewz1-BcZ3aGj2tF6PC1yJA_w1eOVttIUFQJO/exec";
+
+    const sessionId = "VOTER_" + Math.random().toString(36).substring(2, 9) + "_" + Date.now().toString().slice(-4);
+
+    let currentStep = 0;
+    const steps = document.querySelectorAll(".step");
+    const progress = document.getElementById("progress");
+
+    // 生成題目選項：僅顯示純數字
+    function generateOptions(containerId, count, name, isRadio = false) {
+      const container = document.getElementById(containerId);
+      for (let i = 1; i <= count; i++) {
+        const label = document.createElement("label");
+        label.className = "option-item";
+        label.innerHTML = `
+          <input type="${isRadio ? 'radio' : 'checkbox'}" name="${name}" value="${i}">
+          <span>${i}</span>
+        `;
+        label.querySelector("input").addEventListener("change", function() {
+          if (isRadio) {
+            container.querySelectorAll(".option-item").forEach(el => el.classList.remove("selected"));
+            if (this.checked) label.classList.add("selected");
+          } else {
+            label.classList.toggle("selected", this.checked);
+          }
+        });
+        container.appendChild(label);
+      }
+    }
+
+    // 初始化題目
+    generateOptions("q1-grid", 8, "q1", false); // 8選2
+    generateOptions("q2-grid", 4, "q2", true);  // 4選1
+    generateOptions("q3-grid", 5, "q3", true);  // 5選1 (直式)
+    generateOptions("q4-grid", 5, "q4", true);  // 5選1 (直式)
+    generateOptions("q5-grid", 8, "q5", false); // 8選2
+
+    function showStep(index) {
+      steps.forEach((step, idx) => {
+        step.classList.toggle("active", idx === index);
+      });
+      progress.style.width = ((index) / (steps.length - 1)) * 100 + "%";
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    // 點擊「開始投票」時，登記到試算表
+    function handleStartVoting() {
+      const btn = document.getElementById("startVoteBtn");
+      btn.disabled = true;
+      btn.innerText = "載入中...";
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "start",
+          sessionId: sessionId
+        })
+      });
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerText = "開始投票";
+        nextStep();
+      }, 300);
+    }
+
+    // 驗證題數
+    function validateStep(qNum, requiredCount) {
+      const checked = document.querySelectorAll(`input[name="q${qNum}"]:checked`);
+      const hint = document.getElementById(`q${qNum}-hint`);
+      if (checked.length !== requiredCount) {
+        hint.style.display = "block";
+        return false;
+      }
+      hint.style.display = "none";
+      nextStep();
+      return true;
+    }
+
+    // 送出完整結果
+    function validateAndSubmit() {
+      const q5Checked = document.querySelectorAll(`input[name="q5"]:checked`);
+      const hint = document.getElementById("q5-hint");
+      if (q5Checked.length !== 2) {
+        hint.style.display = "block";
+        return;
+      }
+      hint.style.display = "none";
+
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      submitBtn.innerText = "送出選票中...";
+
+      const payload = {
+        action: "submit",
+        sessionId: sessionId,
+        q1: Array.from(document.querySelectorAll('input[name="q1"]:checked')).map(e => e.value).join(", "),
+        q2: document.querySelector('input[name="q2"]:checked')?.value || "",
+        q3: document.querySelector('input[name="q3"]:checked')?.value || "",
+        q4: document.querySelector('input[name="q4"]:checked')?.value || "",
+        q5: Array.from(document.querySelectorAll('input[name="q5"]:checked')).map(e => e.value).join(", ")
+      };
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        currentStep++;
+        showStep(currentStep);
+      }).catch(err => {
+        alert("送出失敗，請檢查網路連線後重試！");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "送出選票";
+      });
+    }
+  </script>
+</body>
+</html>
